@@ -96,18 +96,20 @@ mov rsi, usersProfession
 mov rdx, usersName
 call printf
 
+;information promp
 mov rax, 0
 mov rdi, info_prompt
 call printf
 
+;prompt for user input
 mov rax, 0
 mov rdi, stringformat                                
 mov rsi, get_num_prompt
 call printf
 
 
-                                             
-                                       
+;gets user input
+;and is stored in r15
 mov qword  rax, 0                                           
 mov rdi, eight_byte_format                           
 mov rsi, rsp                                         
@@ -125,31 +127,37 @@ mov rax, 0
 mov rdi, num_stored_prompt
 call printf
 
+;call another function to display array
 mov rax, 0
 mov rdi, array
 mov rsi, r13
 call show_array
 
+;prompt
 mov rax, 0
 mov rdi, normalize_prompt
 call printf
 
+;call another function to normalize
 mov rax, 0
 mov rdi, array 
 mov rsi, r15    ;size
 call fill_random_array
 mov r13, rax
 
+;call another function to display array
 mov rax, 0
 mov rdi, array
 mov rsi, r13
 call show_array
 
+;tell the user goodbye
 mov rax,0
 mov rdi, goodbye_prompt
 mov rsi, usersProfession
 call printf
 
+;load address of name so it can be used in c++
 mov rax,usersName
 
 
