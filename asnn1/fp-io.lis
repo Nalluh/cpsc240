@@ -1,0 +1,309 @@
+     1                                  ;CPSC 240-01
+     2                                  ; Allan Cortes
+     3                                  ; CWID 889755740
+     4                                  ;Assignment 1 
+     5                                  
+     6                                  
+     7                                  
+     8                                  
+     9                                  extern printf                                               ;External C++ function for writing to standard output device
+    10                                  
+    11                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    12                                  
+    13                                  global trip_info                                            
+    14                                  
+    15                                  ;total_distance equ 0x4053E00000000000     
+    16                                  
+    17                                  segment .data                                               ;Place initialized data here
+    18                                  
+    19                                  
+    20 00000000 506C6561736520656E-     firstMessage db "Please enter the speed for the initial segment of the trip(mph):", 0
+    20 00000009 746572207468652073-
+    20 00000012 7065656420666F7220-
+    20 0000001B 74686520696E697469-
+    20 00000024 616C207365676D656E-
+    20 0000002D 74206F662074686520-
+    20 00000036 74726970286D706829-
+    20 0000003F 3A00               
+    21                                  
+    22 00000041 466F7220686F77206D-     secondMessage db "For how many miles will you maintain this average speed? ", 0
+    22 0000004A 616E79206D696C6573-
+    22 00000053 2077696C6C20796F75-
+    22 0000005C 206D61696E7461696E-
+    22 00000065 207468697320617665-
+    22 0000006E 726167652073706565-
+    22 00000077 643F2000           
+    23                                  
+    24 0000007B 576861742077696C6C-     thirdMessage db "What will be your speed during the final segment of the trip(mph)? ", 0
+    24 00000084 20626520796F757220-
+    24 0000008D 737065656420647572-
+    24 00000096 696E67207468652066-
+    24 0000009F 696E616C207365676D-
+    24 000000A8 656E74206F66207468-
+    24 000000B1 652074726970286D70-
+    24 000000BA 68293F2000         
+    25                                  
+    26 000000BF 0A596F757220617665-     fourthMessage db "",0ah,"Your average speed will be %1.02lf mph", 10, 0
+    26 000000C8 726167652073706565-
+    26 000000D1 642077696C6C206265-
+    26 000000DA 2025312E30326C6620-
+    26 000000E3 6D70680A00         
+    27                                  
+    28 000000E8 54686520746F74616C-     fifthMessage db "The total travel time will be %1.02lf hours", 10, 0
+    28 000000F1 2074726176656C2074-
+    28 000000FA 696D652077696C6C20-
+    28 00000103 62652025312E30326C-
+    28 0000010C 6620686F7572730A00 
+    29                                  
+    30                                  
+    31 00000115 257300                  stringformat db "%s", 0                                     ;general string format
+    32                                  
+    33 00000118 416E20696E76616C69-     invalid_input db "An invalid speed was entered. Please run the program again and enter correct data.", 0ah,"Your average speed was not calculated.", 0ah,"The total travel time was not calculated." , 10 ,0 
+    33 00000121 642073706565642077-
+    33 0000012A 617320656E74657265-
+    33 00000133 642E20506C65617365-
+    33 0000013C 2072756E2074686520-
+    33 00000145 70726F6772616D2061-
+    33 0000014E 6761696E20616E6420-
+    33 00000157 656E74657220636F72-
+    33 00000160 726563742064617461-
+    33 00000169 2E0A596F7572206176-
+    33 00000172 657261676520737065-
+    33 0000017B 656420776173206E6F-
+    33 00000184 742063616C63756C61-
+    33 0000018D 7465642E0A54686520-
+    33 00000196 746F74616C20747261-
+    33 0000019F 76656C2074696D6520-
+    33 000001A8 776173206E6F742063-
+    33 000001B1 616C63756C61746564-
+    33 000001BA 2E0A00             
+    34                                  
+    35                                  
+    36 000001BD 416E20696E76616C69-     invalid_input_miiles db "An invalid amount of miles was entered. Please run the program again and enter correct data." , 10 ,0 
+    36 000001C6 6420616D6F756E7420-
+    36 000001CF 6F66206D696C657320-
+    36 000001D8 77617320656E746572-
+    36 000001E1 65642E20506C656173-
+    36 000001EA 652072756E20746865-
+    36 000001F3 2070726F6772616D20-
+    36 000001FC 616761696E20616E64-
+    36 00000205 20656E74657220636F-
+    36 0000020E 727265637420646174-
+    36 00000217 612E0A00           
+    37                                  
+    38 0000021B 256C6600                eight_byte_format db "%lf", 0                               ;general 8-byte float format
+    39                                  
+    40 0000021F 0000000000B06F40        total_distance dq 253.5
+    41                                  
+    42                                  segment .bss                                                ;Place un-initialized data here.
+    43                                  
+    44                                  
+    45                                  
+    46                                  segment .text                                               
+    47                                  
+    48                                  trip_info:                                          ;Entry point.  Execution begins here.
+    49                                  
+    50                                  ;=========== Back up all the GPRs whether used in this program or not =========================================================
+    51                                  
+    52 00000000 55                      push       rbp                                              ;Save a copy of the stack base pointer
+    53 00000001 4889E5                  mov        rbp, rsp                                         ;We do this in order to be 100% compatible with C and C++.
+    54 00000004 53                      push       rbx                                              ;Back up rbx
+    55 00000005 51                      push       rcx                                              ;Back up rcx
+    56 00000006 52                      push       rdx                                              ;Back up rdx
+    57 00000007 56                      push       rsi                                              ;Back up rsi
+    58 00000008 57                      push       rdi                                              ;Back up rdi
+    59 00000009 4150                    push       r8                                               ;Back up r8
+    60 0000000B 4151                    push       r9                                               ;Back up r9
+    61 0000000D 4152                    push       r10                                              ;Back up r10
+    62 0000000F 4153                    push       r11                                              ;Back up r11
+    63 00000011 4154                    push       r12                                              ;Back up r12
+    64 00000013 4155                    push       r13                                              ;Back up r13
+    65 00000015 4156                    push       r14                                              ;Back up r14
+    66 00000017 4157                    push       r15                                              ;Back up r15
+    67 00000019 9C                      pushf                                                       ;Back up rflags
+    68                                  
+    69                                  
+    70                                  
+    71                                  startapplication: 
+    72                                  
+    73                                  ;Show the first message (From c++ and message asking for initial speed)
+    74 0000001A 6A00                    push qword 0                                                
+    75 0000001C B800000000              mov qword  rax, 0                                           
+    76 00000021 48BF-                   mov        rdi, stringformat                                
+    76 00000023 [1501000000000000] 
+    77 0000002B 48BE-                   mov        rsi, firstMessage        ; show first message asking for first leg of trip speed                       
+    77 0000002D [0000000000000000] 
+    78 00000035 E8(00000000)            call       printf                                                         
+    79                                  
+    80                                  
+    81                                  
+    82                                  ;Obtain value for intial segment 
+    83 0000003A 6A00                    push qword 0                                                
+    84 0000003C B800000000              mov qword  rax, 0                                           
+    85 00000041 48BF-                   mov        rdi, eight_byte_format                           
+    85 00000043 [1B02000000000000] 
+    86 0000004B 4889E6                  mov        rsi, rsp                                         
+    87 0000004E E8(00000000)            call       scanf                                            
+    88 00000053 F2440F100C24            movsd      xmm9, [rsp]           ; get value of first leg trip speed and insert it into xmm9                           
+    89 00000059 58                      pop        rax
+    90                                  
+    91                                  
+    92 0000005A 66450F57FF              xorpd xmm15, xmm15    ;xmm15 = 0
+    93 0000005F 66450F2ECF              ucomisd xmm9,xmm15    ; if xmm9 (which is first input) is less than xmm15 (zero) 
+    94 00000064 0F82FF000000            jb neg                ; that means xmm9 is negative
+    95                                                        ; when xmm9 is negative skip code and jump below to block that starts with neg
+    96                                  
+    97                                  
+    98                                  ;Show the second message (For how many miles ?)
+    99 0000006A 6A00                    push qword 0                                                
+   100 0000006C B800000000              mov qword  rax, 0                                           
+   101 00000071 48BF-                   mov        rdi, stringformat                                
+   101 00000073 [1501000000000000] 
+   102 0000007B 48BE-                   mov        rsi, secondMessage                   ; show second message asking for the distance so far                   
+   102 0000007D [4100000000000000] 
+   103 00000085 E8(00000000)            call       printf  
+   104 0000008A 58                      pop rax  
+   105                                  
+   106                                  ;Obtain value for how many miles
+   107 0000008B 6A00                    push qword 0                                                
+   108 0000008D B800000000              mov qword  rax, 0                                           
+   109 00000092 48BF-                   mov        rdi, eight_byte_format                           
+   109 00000094 [1B02000000000000] 
+   110 0000009C 4889E6                  mov        rsi, rsp                                         
+   111 0000009F E8(00000000)            call       scanf                                            
+   112 000000A4 F2440F101424            movsd      xmm10, [rsp]                 ;get value of distance and place it in xmm10                     
+   113 000000AA 58                      pop        rax
+   114                                  
+   115 000000AB F2440F102C25-           movsd xmm13, qword[total_distance]  ;assign 253.5 to xmm13
+   115 000000B1 [1F020000]         
+   116 000000B5 66450F2EEA              ucomisd xmm13, xmm10                ; check if input is greater than 253.5
+   117 000000BA 0F82C9000000            jb tooManyMiles                     ; if input is greater move to tooManyMiles block
+   118                                  
+   119                                  ;Show the third message (speed for final segment): 
+   120 000000C0 6A00                    push qword 0                                                
+   121 000000C2 B800000000              mov qword  rax, 0                                           
+   122 000000C7 48BF-                   mov        rdi, stringformat                                
+   122 000000C9 [1501000000000000] 
+   123 000000D1 48BE-                   mov        rsi, thirdMessage                                ; show third message asking for final speed of second leg of trip         
+   123 000000D3 [7B00000000000000] 
+   124 000000DB E8(00000000)            call       printf  
+   125 000000E0 58                      pop rax  
+   126                                  
+   127                                  ;Obtain a final segment value 
+   128 000000E1 6A00                    push qword 0                                               
+   129 000000E3 B800000000              mov qword  rax, 0                                          
+   130 000000E8 48BF-                   mov        rdi, eight_byte_format                          
+   130 000000EA [1B02000000000000] 
+   131 000000F2 4889E6                  mov        rsi, rsp                                         
+   132 000000F5 E8(00000000)            call       scanf                                            
+   133 000000FA F2440F101C24            movsd      xmm11, [rsp]               ; get value of speed from second leg                       
+   134                                  
+   135 00000100 66450F57FF              xorpd xmm15, xmm15          ;xmm15 =0
+   136 00000105 66450F2EDF              ucomisd xmm11,xmm15         ; if xmm11 is negative it jump below to neg2
+   137 0000010A 0F8299000000            jb neg2                     ; else continue with math 
+   138                                  
+   139                                  
+   140                                  ;calculates total hours on drive 
+   141 00000110 F2410F10C2              movsd xmm0, xmm10 ;copy second value aka 107.4 xmm0 = 107.4
+   142 00000115 F2450F5ED1              divsd xmm10, xmm9 ;1.48 value   xmm10 = 107.4/72.5                      Second input / first input 
+   143 0000011A F20F100C25-             movsd xmm1, qword[total_distance] ; xmm1 = 253.5                        put the total distance into xmm1
+   143 0000011F [1F020000]         
+   144 00000123 F20F5CC8                subsd xmm1, xmm0 ; give length of second leg  xmm1 = 253.5 - 107.4      subtract total distance by first distance to get remaining distance
+   145 00000127 F2410F5ECB              divsd xmm1, xmm11 ; 1.65    xmm1 = xmm1 / xmm11 = 146.4 / 88.5          Get time for second lef of tri
+   146 0000012C F2440F58D1              addsd xmm10,xmm1 ; Total hours of travel 3.13 xmm10 = 1.48 + 1.65        Add first leg and second leg times  `````total hours values ``````
+   147 00000131 F20F101425-             movsd xmm2, qword[total_distance]  ; xmm2 = 253.5                       copy total distance once again
+   147 00000136 [1F020000]         
+   148 0000013A F2410F5ED2              divsd xmm2,xmm10 ; xmm2 = 253.5 / 3.13                                   divide total distance by total time spent riding to get mph `````avg speed value``````
+   149                                  
+   150 0000013F 48BF-                   mov rdi, fourthMessage
+   150 00000141 [BF00000000000000] 
+   151 00000149 F20F10C2                movsd xmm0, xmm2 ; this will return avg speed 
+   152 0000014D E8(00000000)            call printf
+   153                                  
+   154 00000152 48BF-                   mov rdi, fifthMessage
+   154 00000154 [E800000000000000] 
+   155 0000015C F2410F10C2              movsd xmm0, xmm10 ; this will return hours of trip
+   156 00000161 E8(00000000)            call printf
+   157                                  
+   158                                  
+   159                                  
+   160 00000166 58                      pop rax
+   161                                  
+   162 00000167 EB5F                    jmp continue ;when values are valid skip neg blocks 
+   163                                  
+   164                                  neg:            ;when xmm9 is negative code will print message stating to try again with valid input
+   165 00000169 B800000000              mov rax, 0
+   166 0000016E 48BF-                   mov rdi, invalid_input
+   166 00000170 [1801000000000000] 
+   167 00000178 F2440F101425-           movsd xmm10, qword[total_distance]            ;move 253.5 into xmm10 because we use xmm10 to return to c++ file
+   167 0000017E [1F020000]         
+   168 00000182 E8(00000000)            call printf
+   169 00000187 EB3F                    jmp continue   ;this jmp is here to skip the neg2 block
+   170                                                  ; neg2 is for validating third input 
+   171                                                  ;cannot use same neg block for third input
+   172                                                  ;because we will seg fault for not popping rax
+   173                                                  ;we cannot pop rax in this block because when xmm9 is negative
+   174                                                  ; we skip the push that we are popping 
+   175                                  
+   176                                  
+   177                                  tooManyMiles:
+   178 00000189 B800000000              mov rax, 0
+   179 0000018E 48BF-                   mov rdi, invalid_input_miiles ;this block is activated when miles input is greater than 253.5
+   179 00000190 [BD01000000000000] 
+   180 00000198 F2440F101425-           movsd xmm10, qword[total_distance]            ;move 253.5 into xmm10 because we use xmm10 to return to c++ file
+   180 0000019E [1F020000]         
+   181 000001A2 E8(00000000)            call printf
+   182 000001A7 EB1F                    jmp continue                 ;we jmp to continue to avoid neg2 block and the seg fault 
+   183                                  
+   184                                  
+   185                                  
+   186                                  neg2:                       ;this block is for third input 
+   187 000001A9 B800000000              mov rax, 0                  
+   188 000001AE 48BF-                   mov rdi, invalid_input
+   188 000001B0 [1801000000000000] 
+   189 000001B8 F2440F101425-           movsd xmm10, qword[total_distance]          ;move 253.5 into xmm10 because we use xmm10 to return to c++ file
+   189 000001BE [1F020000]         
+   190 000001C2 E8(00000000)            call printf
+   191 000001C7 58                      pop rax
+   192                                  continue:
+   193                                  
+   194                                  
+   195                                  ; second input / first input = Time of first leg     1 
+   196                                  ; total_distance - second input = second length      2
+   197                                  ; second length / third input  = time of second leg  3
+   198                                  
+   199                                  ; HoT = 1 + 3 (hours on trip)
+   200                                  ; avg speed = total_distance / Hot
+   201                                  
+   202                                  
+   203                                  
+   204                                  
+   205                                  
+   206                                  
+   207                                  
+   208 000001C8 415E                    pop        r14                                             
+   209                                  
+   210                                  
+   211                                  setreturnvalue:
+   212 000001CA 4156                    push       r14                                              
+   213 000001CC F2410F10C2              movsd      xmm0, xmm10     ; return value to c++ file                                 
+   214 000001D1 415E                    pop        r14                                              
+   215                                  
+   216                                  ;Restore the original values to the GPRs
+   217 000001D3 9D                      popf                                                        ;Restore rflags
+   218 000001D4 415F                    pop        r15                                              ;Restore r15
+   219 000001D6 415E                    pop        r14                                              ;Restore r14
+   220 000001D8 415D                    pop        r13                                              ;Restore r13
+   221 000001DA 415C                    pop        r12                                              ;Restore r12
+   222 000001DC 415B                    pop        r11                                              ;Restore r11
+   223 000001DE 415A                    pop        r10                                              ;Restore r10
+   224 000001E0 4159                    pop        r9                                               ;Restore r9
+   225 000001E2 4158                    pop        r8                                               ;Restore r8
+   226 000001E4 5F                      pop        rdi                                              ;Restore rdi
+   227 000001E5 5E                      pop        rsi                                              ;Restore rsi
+   228 000001E6 5A                      pop        rdx                                              ;Restore rdx
+   229 000001E7 59                      pop        rcx                                              ;Restore rcx
+   230 000001E8 5B                      pop        rbx                                              ;Restore rbx
+   231 000001E9 5D                      pop        rbp                                              ;Restore rbp
+   232                                  
+   233 000001EA C3                      ret        
