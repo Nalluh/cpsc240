@@ -73,8 +73,18 @@ xor rcx, rcx
 loop_with_range:
 cmp rcx, r13
 jge done
+;mask
+mov r11, 0x3ff00000000000
 
-;;; normalize code goes here
+rdrand r10
+shl r10, 12
+shr r10, 12
+or r10,r11
+;kept getting values such as 0x003ff91ddd147628
+;this shifts value left 8 bits to correct place 
+shl r10,8
+mov [r15 + rcx*8], r10
+
 inc rcx
 
 
